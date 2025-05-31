@@ -18,11 +18,20 @@ export const addressBookSlice = createSlice({
   initialState,
   reducers: {
     addAddress: (state, action: PayloadAction<Address>) => {
-      /** TODO: Prevent duplicate addresses */
-      state.addresses.push(action.payload);
+      const newAddress = action.payload;
+      const existingAddress = state.addresses.find(
+        (value) => value.id === newAddress.id,
+      );
+      if (!existingAddress) {
+        state.addresses.push(newAddress);
+      }
     },
     removeAddress: (state, action: PayloadAction<string>) => {
-      /** TODO: Write a state update which removes an address from the addresses array. */
+      const newAddresses = state.addresses.filter(
+        (value) => value.id !== action.payload,
+      );
+
+      state.addresses = newAddresses;
     },
     updateAddresses: (state, action: PayloadAction<Address[]>) => {
       state.addresses = action.payload;
