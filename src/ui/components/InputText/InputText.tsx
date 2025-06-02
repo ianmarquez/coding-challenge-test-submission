@@ -7,6 +7,7 @@ export interface InputTextProps {
   placeholder: string;
   value: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled: boolean;
 }
 
 const InputText: FunctionComponent<InputTextProps> = ({
@@ -14,6 +15,7 @@ const InputText: FunctionComponent<InputTextProps> = ({
   onChange,
   placeholder,
   value,
+  disabled = false,
 }) => {
   return (
     <input
@@ -24,6 +26,7 @@ const InputText: FunctionComponent<InputTextProps> = ({
       placeholder={placeholder}
       type="text"
       value={value}
+      disabled={disabled}
     />
   );
 };

@@ -41,10 +41,26 @@ body {
   font-size: 18px;
   font-family: var(--font-primary);
   background: var(--color-accent);
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+/* Make font size responsive */
+@media (max-width: 600px) {
+  body {
+    font-size: 16px;
+  }
 }
 
 main {
   padding: 2rem;
+}
+
+@media (max-width: 600px) {
+  main {
+    padding: 1rem;
+  }
 }
 
 small {
@@ -61,8 +77,23 @@ fieldset {
   max-width: var(--width-input);
   padding: 1rem 0;
   width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  fieldset {
+    margin: 1rem 0;
+    padding: 0.5rem 0;
+  }
 }
 
 legend {
   color: var(--color-text-light);
+  font-size: 1rem;
+}
+
+@media (max-width: 600px) {
+  legend {
+    font-size: 0.9rem;
+  }
 }

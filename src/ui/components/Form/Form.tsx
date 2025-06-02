@@ -7,7 +7,7 @@ import $ from "./Form.module.css";
 interface FormEntry {
   name: string;
   placeholder: string;
-  extraProps: Omit<InputTextProps, "name" | "placeholder">;
+  extraProps: Omit<InputTextProps, "name" | "placeholder" | "disabled">;
 }
 
 interface FormProps {
@@ -30,11 +30,11 @@ const Form: FunctionComponent<FormProps> = ({
       <fieldset>
         <legend>{label}</legend>
         {formEntries.map(({ name, placeholder, extraProps }, index) => (
-          <div key={`${name}-${index}`} className={$.formRow}>
+          <div key={`${name}-${index}-container`} className={$.formRow}>
             <InputText
-              key={`${name}-${index}`}
               name={name}
               placeholder={placeholder}
+              disabled={loading}
               {...extraProps}
             />
           </div>

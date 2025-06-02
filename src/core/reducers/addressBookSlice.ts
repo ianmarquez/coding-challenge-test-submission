@@ -20,7 +20,10 @@ export const addressBookSlice = createSlice({
     addAddress: (state, action: PayloadAction<Address>) => {
       const newAddress = action.payload;
       const existingAddress = state.addresses.find(
-        (value) => value.id === newAddress.id,
+        (value) =>
+          value.id === newAddress.id &&
+          value.firstName === newAddress.firstName &&
+          value.lastName === newAddress.lastName,
       );
       if (!existingAddress) {
         state.addresses.push(newAddress);

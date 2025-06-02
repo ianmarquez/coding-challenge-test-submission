@@ -4,7 +4,7 @@ import generateMockAddresses from "../../src/utils/generateMockAddresses";
 
 export default async function handle(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const {
     query: { postcode, streetnumber },
@@ -26,14 +26,11 @@ export default async function handle(
     });
   }
 
-  /** TODO: Implement the validation logic to ensure input value
-   *  is all digits and non negative
-   */
   const isStrictlyNumeric = (value: string) => {
-    return true;
+    const num = Number(value);
+    return Number.isInteger(num) && value.trim() !== "" && num > -1;
   };
 
-  /** TODO: Refactor the code below so there is no duplication of logic for postCode/streetNumber digit checks. */
   if (!isStrictlyNumeric(postcode as string)) {
     return res.status(400).send({
       status: "error",
@@ -50,7 +47,7 @@ export default async function handle(
 
   const mockAddresses = generateMockAddresses(
     postcode as string,
-    streetnumber as string
+    streetnumber as string,
   );
   if (mockAddresses) {
     const timeout = (ms: number) => {

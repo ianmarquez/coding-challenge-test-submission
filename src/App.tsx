@@ -6,95 +6,78 @@ import Radio from "@/components/Radio/Radio";
 import Section from "@/components/Section/Section";
 import useAddressBook from "@/hooks/useAddressBook";
 
-import styles from "./App.module.css";
-import { Address as AddressType } from "./types";
 import Form from "@/components/Form/Form";
 import ErrorMessage from "@/components/ErrorMessage/ErrorMessage";
+import { useDynamicForm } from "./hooks/useDynamicForm";
+import useAddressSearch from "./hooks/useAddressSearch";
+import Button from "@/components/Button/Button";
+
+type AddressFormInputs = {
+  postCode: string;
+  houseNumber: string;
+  firstName: string;
+  lastName: string;
+  selectedAddress: string | undefined;
+};
 
 function App() {
-  /**
-   * Form fields states
-   * TODO: Write a custom hook to set form fields in a more generic way:
-   * - Hook must expose an onChange handler to be used by all <InputText /> and <Radio /> components
-   * - Hook must expose all text form field values, like so: { postCode: '', houseNumber: '', ...etc }
-   * - Remove all individual React.useState
-   * - Remove all individual onChange handlers, like handlePostCodeChange for example
-   */
-  const [postCode, setPostCode] = React.useState("");
-  const [houseNumber, setHouseNumber] = React.useState("");
-  const [firstName, setFirstName] = React.useState("");
-  const [lastName, setLastName] = React.useState("");
-  const [selectedAddress, setSelectedAddress] = React.useState("");
-  /**
-   * Results states
-   */
+  const {
+    values: formValues,
+    onChange,
+    clearAll: clearAllFields,
+  } = useDynamicForm<AddressFormInputs>({
+    postCode: "",
+    houseNumber: "",
+    firstName: "",
+    lastName: "",
+    selectedAddress: undefined,
+  });
+  const {
+    addresses,
+    isFetching,
+    handleFetchRequest: handleAddressesFetchRequest,
+    error: addressSearchError,
+    clearError: clearAddressSearchError,
+    clearAddresses,
+  } = useAddressSearch();
+
   const [error, setError] = React.useState<undefined | string>(undefined);
-  const [addresses, setAddresses] = React.useState<AddressType[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  /**
-   * Redux actions
-   */
+  const loading = isFetching;
   const { addAddress } = useAddressBook();
 
-  /**
-   * Text fields onChange handlers
-   */
-  const handlePostCodeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setPostCode(e.target.value);
-
-  const handleHouseNumberChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setHouseNumber(e.target.value);
-
-  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setFirstName(e.target.value);
-
-  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setLastName(e.target.value);
-
-  const handleSelectedAddressChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => setSelectedAddress(e.target.value);
-
-  /** TODO: Fetch addresses based on houseNumber and postCode using the local BE api
-   * - Example URL of API: ${process.env.NEXT_PUBLIC_URL}/api/getAddresses?postcode=1345&streetnumber=350
-   * - Ensure you provide a BASE URL for api endpoint for grading purposes!
-   * - Handle errors if they occur
-   * - Handle successful response by updating the `addresses` in the state using `setAddresses`
-   * - Make sure to add the houseNumber to each found address in the response using `transformAddress()` function
-   * - Ensure to clear previous search results on each click
-   * - Bonus: Add a loading state in the UI while fetching addresses
-   */
   const handleAddressSubmit = async (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const postCode = formData.get("postCode");
-    const houseNumber = formData.get("houseNumber");
-    console.log(postCode, houseNumber);
+    handleAddressesFetchRequest(formValues.postCode, formValues.houseNumber);
+    clearAllFields(["postCode", "houseNumber"]);
   };
 
-  /** TODO: Add basic validation to ensure first name and last name fields aren't empty
-   * Use the following error message setError("First name and last name fields mandatory!")
-   */
   const handlePersonSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!selectedAddress || !addresses.length) {
-      setError(
+    if (!formValues.lastName || !formValues.firstName) {
+      return setError("First name and last name fields mandatory!");
+    }
+
+    if (!formValues.selectedAddress || !addresses.length) {
+      return setError(
         "No address selected, try to select an address or find one if you haven't",
       );
-      return;
     }
 
     const foundAddress = addresses.find(
-      (address) => address.id === selectedAddress,
+      (address) => address.id === formValues.selectedAddress,
     );
 
     if (!foundAddress) {
-      setError("Selected address not found");
-      return;
+      return setError("Selected address not found");
     }
 
-    addAddress({ ...foundAddress, firstName, lastName });
+    addAddress({
+      ...foundAddress,
+      id: `${foundAddress.id}-${formValues.firstName}-${formValues.lastName}`,
+      firstName: formValues.firstName,
+      lastName: formValues.lastName,
+    });
   };
 
   return (
@@ -115,16 +98,16 @@ function App() {
               name: "postCode",
               placeholder: "Post Code",
               extraProps: {
-                onChange: handlePostCodeChange,
-                value: postCode,
+                onChange,
+                value: formValues.postCode,
               },
             },
             {
               name: "houseNumber",
               placeholder: "House Number",
               extraProps: {
-                onChange: handleHouseNumberChange,
-                value: houseNumber,
+                onChange,
+                value: formValues.houseNumber,
               },
             },
           ]}
@@ -132,19 +115,19 @@ function App() {
           submitText="Find"
         />
         {addresses.length > 0 &&
-          addresses.map((address) => {
+          addresses.map((address, index) => {
             return (
               <Radio
                 name="selectedAddress"
                 id={address.id}
-                key={address.id}
-                onChange={handleSelectedAddressChange}
+                key={`${address.id}-${index}-radio`}
+                onChange={onChange}
               >
                 <Address {...address} />
               </Radio>
             );
           })}
-        {selectedAddress && (
+        {formValues.selectedAddress && (
           <Form
             label={"✏️ Add personal info to address"}
             loading={loading}
@@ -153,14 +136,14 @@ function App() {
                 name: "firstName",
                 placeholder: "First name",
                 extraProps: {
-                  onChange: handleFirstNameChange,
-                  value: firstName,
+                  onChange,
+                  value: formValues.firstName,
                 },
               },
               {
                 name: "lastName",
                 placeholder: "Last name",
-                extraProps: { onChange: handleLastNameChange, value: lastName },
+                extraProps: { onChange, value: formValues.lastName },
               },
             ]}
             onFormSubmit={handlePersonSubmit}
@@ -168,14 +151,20 @@ function App() {
           />
         )}
 
-        <ErrorMessage error={error} />
+        <ErrorMessage error={addressSearchError ?? error} />
 
-        {/* TODO: Add a button to clear all form fields. 
-        Button must look different from the default primary button, see design. 
-        Button text name must be "Clear all fields"
-        On Click, it must clear all form fields, remove all search results and clear all prior
-        error messages
-        */}
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => {
+            clearAddressSearchError();
+            setError("");
+            clearAllFields();
+            clearAddresses();
+          }}
+        >
+          Clear all fields
+        </Button>
       </Section>
 
       <Section variant="dark">

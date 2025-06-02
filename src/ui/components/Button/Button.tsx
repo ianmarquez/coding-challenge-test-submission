@@ -11,6 +11,18 @@ interface ButtonProps {
   children: React.ReactNode;
 }
 
+const LoadingSpinner = () => {
+  return (
+    <img
+      className={$.spinner}
+      width="20"
+      height="20"
+      src="/spinner.svg"
+      data-testid="loading-spinner"
+    />
+  );
+};
+
 const Button: FunctionComponent<ButtonProps> = ({
   children,
   onClick,
@@ -20,14 +32,17 @@ const Button: FunctionComponent<ButtonProps> = ({
 }) => {
   return (
     <button
-      // TODO: Add conditional classNames
-      // - Must have a condition to set the '.primary' className
-      // - Must have a condition to set the '.secondary' className
-      // - Display loading spinner per demo video. NOTE: add data-testid="loading-spinner" for spinner element (used for grading)
-      className={$.button}
+      className={`${$.button} ${$[variant]}`}
       type={type}
       onClick={onClick}
+      disabled={loading}
     >
+      {loading && (
+        <>
+          <LoadingSpinner />
+          &nbsp;
+        </>
+      )}
       {children}
     </button>
   );
